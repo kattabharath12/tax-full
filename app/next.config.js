@@ -1,7 +1,7 @@
 const path = require('path');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone', // Required for Docker deployments
   distDir: '.next',
   experimental: {
     outputFileTracingRoot: path.join(__dirname, '../'),
@@ -48,5 +48,4 @@ const nextConfig = {
     ];
   }
 };
-
 module.exports = nextConfig;
