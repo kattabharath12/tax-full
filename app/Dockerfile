@@ -14,13 +14,13 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy all source files BEFORE running build
 COPY . .
 
-# Verify files are copied correctly (debug step)
-RUN ls -la /app/components/ui/
-
-# Generate Prisma client
+# Generate Prisma client FIRST
 RUN npx prisma generate
 
-# Build the application (now has access to tailwindcss)
+# Debug: Verify Prisma client was generated
+RUN ls -la /app/node_modules/.prisma/client/
+
+# Build the application (now Prisma client is available)
 RUN npm run build
 
 FROM node:18-alpine AS runner
