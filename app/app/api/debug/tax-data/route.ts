@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       taxReturnsCount: user.taxReturns.length,
       taxReturns: user.taxReturns.map((taxReturn: any) => {
         const totalItemizedDeductions = taxReturn.deductionEntries.reduce(
-          (sum, entry) => sum + parseFloat(entry.amount?.toString() || '0'), 0
+          (sum: number, entry: any) => sum + parseFloat(entry.amount?.toString() || '0'), 0
         )
         
         const adjustedGrossIncome = parseFloat(taxReturn.adjustedGrossIncome?.toString() || taxReturn.totalIncome?.toString() || '0')
