@@ -9,13 +9,16 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+RUN npm config set legacy-peer-deps true && npm install --omit=dev
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Set legacy peer deps for any additional installs
+RUN npm config set legacy-peer-deps true
 
 # Generate Prisma client
 RUN npx prisma generate
