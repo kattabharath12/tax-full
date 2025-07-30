@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const debugData = {
       userEmail: user.email,
       taxReturnsCount: user.taxReturns.length,
-      taxReturns: user.taxReturns.map(taxReturn => {
+      taxReturns: user.taxReturns.map((taxReturn: any) => {
         const totalItemizedDeductions = taxReturn.deductionEntries.reduce(
           (sum, entry) => sum + parseFloat(entry.amount?.toString() || '0'), 0
         )
