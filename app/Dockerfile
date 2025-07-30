@@ -1,53 +1,46 @@
-
-# Use the official Node.js 18 image
-FROM node:18-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
+FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
+# Copy package files
 COPY package.json package-lock.json* ./
-RUN npm config set legacy-peer-deps true && npm install --omit=dev
+# Install ALL dependencies (including dev dependencies for build)
+RUN npm config set legacy-peer-deps true && npm ci
 
-# Rebuild the source code only when needed
-FROM base AS builder
+FROM node:18-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+
+# Copy all source files BEFORE running build
 COPY . .
 
-# Set legacy peer deps for any additional installs
-RUN npm config set legacy-peer-deps true
+# Verify files are copied correctly (debug step)
+RUN ls -la /app/components/ui/
 
 # Generate Prisma client
 RUN npx prisma generate
 
-# Build the application
+# Build the application (now has access to tailwindcss)
 RUN npm run build
 
-# Production image, copy all the files and run next
-FROM base AS runner
+FROM node:18-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy the built application
+# Copy built application
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 USER nextjs
 
 EXPOSE 3000
-
 ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
 
 CMD ["node", "server.js"]
